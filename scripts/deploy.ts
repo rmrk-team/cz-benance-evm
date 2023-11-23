@@ -283,7 +283,7 @@ async function configureCatalog(
         itemType: C.PART_TYPE_FIXED,
         z: C.PARENT_Z_INDEX,
         equippable: [],
-        metadataURI: `${C.PARENT_FIXED_METADATA}${i}.json`,
+        metadataURI: `${C.PARENT_ASSETS_BASE_URI}${i}.json`,
       },
     });
   }
