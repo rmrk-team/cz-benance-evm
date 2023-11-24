@@ -1,9 +1,10 @@
 import { getRegistry } from './getRegistry';
 import { deployContracts, configureRelationships, addAssets, configureCatalog } from './deploy';
 import * as C from './constants';
+import { ethers } from 'hardhat';
 
 async function main() {
-  console.log('Deploying smart simple equippable contract');
+  console.log('Deploying CZ Collections contract');
 
   const { parent, backgrounds, glasses, hands, hats, shirts, minter, catalog } =
     await deployContracts();

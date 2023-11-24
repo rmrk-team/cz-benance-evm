@@ -65,8 +65,8 @@ def generate_collection_metadatas():
             'description': input_datum['description'],
             'externalUri': 'https://benance.mintaur.app',
             'external_url': 'https://benance.mintaur.app',
-            'image': f'{ASSETS_BASE_URI[type]}collection_thumb.png',
-            'thumbnailUri': f'{ASSETS_BASE_URI[type]}collection_thumb.png',
+            'image': f'{ASSETS_BASE_URI[type]}collection_thumb.gif',
+            'thumbnailUri': f'{ASSETS_BASE_URI[type]}collection_thumb.gif',
         }
         output_path = OUTPUT_BASE_PATH_COLLECTION_METADATA.format(type=type)
         with open(output_path, 'w') as f:

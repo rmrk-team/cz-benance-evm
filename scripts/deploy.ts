@@ -101,13 +101,13 @@ async function deployContracts(): Promise<{
   const minter: Minter = await minterFactory.deploy(...minterArgs);
   await minter.deployed();
 
-  let tx = await minter.setTotalAssets(
-    C.PARENT_TOTAL_ASSETS,
-    C.BACKGROUNDS_TOTAL_ASSETS,
-    C.GLASSES_TOTAL_ASSETS,
-    C.HANDS_TOTAL_ASSETS,
-    C.HATS_TOTAL_ASSETS,
-    C.SHIRTS_TOTAL_ASSETS,
+  let tx = await minter.setAssetOdds(
+    C.PARENT_ASSETS_ODDS,
+    C.BACKGROUNDS_ASSETS_ODDS,
+    C.GLASSES_ASSETS_ODDS,
+    C.HANDS_ASSETS_ODDS,
+    C.HATS_ASSETS_ODDS,
+    C.SHIRTS_ASSETS_ODDS,
   );
   await tx.wait();
 
@@ -222,7 +222,14 @@ async function addAssets(
     C.PARENT_TOTAL_ASSETS,
     C.PARENT_EQUIPPABLE_GROUP_ID,
     catalog.address,
-    [C.BACKGROUNDS_SLOT_ID, C.GLASSES_SLOT_ID, C.HANDS_SLOT_ID, C.HATS_SLOT_ID, C.SHIRTS_SLOT_ID],
+    [
+      C.BACKGROUNDS_SLOT_ID,
+      C.GLASSES_SLOT_ID,
+      C.HANDS_SLOT_ID,
+      C.HATS_SLOT_ID,
+      C.SHIRTS_SLOT_ID,
+      C.FRAMES_SLOT_ID,
+    ],
   );
   await tx.wait();
 
@@ -281,7 +288,7 @@ async function configureCatalog(
       partId: i,
       part: {
         itemType: C.PART_TYPE_FIXED,
-        z: C.PARENT_Z_INDEX,
+        z: C.BODY_Z_INDEX,
         equippable: [],
         metadataURI: `${C.PARENT_ASSETS_BASE_URI}${i}.json`,
       },
