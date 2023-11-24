@@ -11,7 +11,14 @@ OUTPUT_BASE_PATH_ASSETS = './metadata/{type}/assets/{consecutive}.json'
 OUTPUT_BASE_PATH_COLLECTION_METADATA = './metadata/{type}/metadata.json'
 OUTPUT_BASE_PATH_CATALOG_SLOTS = './metadata/catalog/{type}.json'
 OUTPUT_CATALOG_METADATA = './metadata/catalog/metadata.json'
-ASSETS_BASE_URI = 'ipfs://ABC/'
+ASSETS_BASE_URI = {
+    'parent': 'ipfs://Qma995FLL4TiM9p2Hz3vLjdKpafjqdSe7ojsuEUeQxq9Rg/',
+    'backgrounds': 'ipfs://QmapE7tBo4Gj1GNDsLP93xAVRSrBvUhujHtahVEkjqYhGC/',
+    'glasses': 'ipfs://QmRwoLtEsDCkeh31wKCar94c1zBb69apVpQANxcLxKQRJU/',
+    'hands': 'ipfs://QmQXkgFEPunGTWtmKKKD9gznQSferHMZiR2dmddfUM4Ku8/',
+    'hats': 'ipfs://QmRtmLjGffiRZAAuFgLfznMCAzaVDtcvkMKadmmwKaiiaW/',
+    'shirts': 'ipfs://QmSwRjAXYABYDQsGyHcAyupuG5AukkCfiQVVX9XATbmkCw/',
+}
 
 
 def generate_asset_metadata():
@@ -22,24 +29,23 @@ def generate_asset_metadata():
             input_assets = list(reader)
         
         for input_asset in input_assets:
-            consecutive = input_asset['name']
+            consecutive = input_asset['consecutive']
             output_path = OUTPUT_BASE_PATH_ASSETS.format(type=type, consecutive=consecutive)
 
-            mainImage = f'{ASSETS_BASE_URI}/{type}/assets/thumb/{consecutive}.png'
+            mainImage = f'{ASSETS_BASE_URI[type]}thumb/{consecutive}.png'
+            equippedImage = f'{ASSETS_BASE_URI[type]}equipped/{consecutive}.png'
             metadata = {
                 'name': input_asset['name'],
                 'description': input_asset['description'],
                 'externalUri': 'https://benance.mintaur.app',
                 'external_url': 'https://benance.mintaur.app',
                 'image': mainImage,
+                'thumbnailUri': mainImage,
                 'license': 'CC0',
             }
-            if type == 'parent':
-                metadata['mediaUri'] = f'{ASSETS_BASE_URI}/{type}/assets/equipped/{consecutive}.png'
-                metadata['thumbnailUri'] = mainImage
+            if type not in ['parent']:
+                metadata['mediaUri'] = equippedImage
                 metadata['preferThumb'] = True
-            else:
-                metadata['mediaUri'] = mainImage
             with open(output_path, 'w') as f:
                 json.dump(metadata, f, indent=4)
 
@@ -59,8 +65,8 @@ def generate_collection_metadatas():
             'description': input_datum['description'],
             'externalUri': 'https://benance.mintaur.app',
             'external_url': 'https://benance.mintaur.app',
-            'mediaUri': f'{ASSETS_BASE_URI}/{type}/collection.png',
-            'thumbnailUri': f'{ASSETS_BASE_URI}/{type}/collection_thumb.png',
+            'image': f'{ASSETS_BASE_URI[type]}collection_thumb.png',
+            'thumbnailUri': f'{ASSETS_BASE_URI[type]}collection_thumb.png',
         }
         output_path = OUTPUT_BASE_PATH_COLLECTION_METADATA.format(type=type)
         with open(output_path, 'w') as f:

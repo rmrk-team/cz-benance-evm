@@ -8,6 +8,7 @@ import {IERC6220} from "@rmrk-team/evm-contracts/contracts/RMRK/equippable/IERC6
 import {IMintableWithAsset} from "./IMintableWithAsset.sol";
 
 error FailedToSend();
+error IncorrectOdds();
 error IncorrectValueSent();
 
 contract Minter is Ownable, IERC721Receiver {
@@ -29,12 +30,12 @@ contract Minter is Ownable, IERC721Receiver {
     IMintableWithAsset private _hats;
     IMintableWithAsset private _shirts;
 
-    uint256 private _parentTotalAssets;
-    uint256 private _backgroundsTotalAssets;
-    uint256 private _glassesTotalAssets;
-    uint256 private _handsTotalAssets;
-    uint256 private _hatsTotalAssets;
-    uint256 private _shirtsTotalAssets;
+    uint256[] private _parentAssetOdds;
+    uint256[] private _backgroundsAssetOdds;
+    uint256[] private _glassesAssetOdds;
+    uint256[] private _handsAssetOdds;
+    uint256[] private _hatsAssetOdds;
+    uint256[] private _shirtsAssetOdds;
 
     uint64 private constant BACKGROUNDS_SLOT_ID = 1001;
     uint64 private constant GLASSES_SLOT_ID = 1002;
@@ -111,12 +112,32 @@ contract Minter is Ownable, IERC721Receiver {
             uint256 shirts
         )
     {
-        parent = _parentTotalAssets;
-        backgrounds = _backgroundsTotalAssets;
-        glasses = _glassesTotalAssets;
-        hands = _handsTotalAssets;
-        hats = _hatsTotalAssets;
-        shirts = _shirtsTotalAssets;
+        parent = _parentAssetOdds.length;
+        backgrounds = _backgroundsAssetOdds.length;
+        glasses = _glassesAssetOdds.length;
+        hands = _handsAssetOdds.length;
+        hats = _hatsAssetOdds.length;
+        shirts = _shirtsAssetOdds.length;
+    }
+
+    function getAssetods()
+        external
+        view
+        returns (
+            uint256[] memory parent,
+            uint256[] memory backgrounds,
+            uint256[] memory glasses,
+            uint256[] memory hands,
+            uint256[] memory hats,
+            uint256[] memory shirts
+        )
+    {
+        parent = _parentAssetOdds;
+        backgrounds = _backgroundsAssetOdds;
+        glasses = _glassesAssetOdds;
+        hands = _handsAssetOdds;
+        hats = _hatsAssetOdds;
+        shirts = _shirtsAssetOdds;
     }
 
     function getPacksMinted() public view returns (uint256) {
@@ -131,20 +152,39 @@ contract Minter is Ownable, IERC721Receiver {
         _beneficiary = beneficiary;
     }
 
-    function setTotalAssets(
-        uint256 parent,
-        uint256 backgrounds,
-        uint256 glasses,
-        uint256 hands,
-        uint256 hats,
-        uint256 shirts
+    function setAssetOdds(
+        uint256[] memory parentOdds,
+        uint256[] memory backgroundsOdds,
+        uint256[] memory glassesOdds,
+        uint256[] memory handsOdds,
+        uint256[] memory hatsOdds,
+        uint256[] memory shirtsOdds
     ) external onlyOwnerOrContributor {
-        _parentTotalAssets = parent;
-        _backgroundsTotalAssets = backgrounds;
-        _glassesTotalAssets = glasses;
-        _handsTotalAssets = hands;
-        _hatsTotalAssets = hats;
-        _shirtsTotalAssets = shirts;
+        delete _parentAssetOdds;
+        delete _backgroundsAssetOdds;
+        delete _glassesAssetOdds;
+        delete _handsAssetOdds;
+        delete _hatsAssetOdds;
+        delete _shirtsAssetOdds;
+
+        _setOdds(_parentAssetOdds, parentOdds);
+        _setOdds(_backgroundsAssetOdds, backgroundsOdds);
+        _setOdds(_glassesAssetOdds, glassesOdds);
+        _setOdds(_handsAssetOdds, handsOdds);
+        _setOdds(_hatsAssetOdds, hatsOdds);
+        _setOdds(_shirtsAssetOdds, shirtsOdds);
+    }
+
+    function _setOdds(
+        uint256[] storage currentOdds,
+        uint256[] memory newOdds
+    ) private {
+        uint256 totalOdds;
+        for (uint256 i = 0; i < newOdds.length; i++) {
+            totalOdds += newOdds[i];
+            currentOdds.push(newOdds[i]);
+        }
+        if (totalOdds != 100) revert IncorrectOdds();
     }
 
     function mintPacks(address to, uint256 numPacks) external payable {
@@ -155,6 +195,10 @@ contract Minter is Ownable, IERC721Receiver {
     }
 
     function _mintParentAndChildren(address to) private {
+        unchecked {
+            ++_packsMinted;
+        }
+
         (
             uint64 parentAssetId,
             uint64 backgroundAssetId,
@@ -163,9 +207,6 @@ contract Minter is Ownable, IERC721Receiver {
             uint64 hatAssetId,
             uint64 shirtAssetId
         ) = _getAssetIds();
-        unchecked {
-            ++_packsMinted;
-        }
 
         uint256 parentId = _parent.mint(address(this), parentAssetId);
         _backgrounds.nestMint(address(_parent), parentId, backgroundAssetId);
@@ -229,22 +270,45 @@ contract Minter is Ownable, IERC721Receiver {
             uint64 shirtAssetId
         )
     {
-        uint256 seed = uint256(
+        uint256 baseSeed = uint256(
             keccak256(
-                abi.encodePacked(block.timestamp, block.difficulty, msg.sender)
+                abi.encodePacked(
+                    block.timestamp,
+                    block.difficulty,
+                    msg.sender,
+                    _packsMinted
+                )
             )
         );
-        parentAssetId = uint64((seed % _parentTotalAssets) + 1);
-        seed >> 8;
-        backgroundAssetId = uint64((seed % _backgroundsTotalAssets) + 1);
-        seed >> 8;
-        glassesAssetId = uint64((seed % _glassesTotalAssets) + 1);
-        seed >> 8;
-        handsAssetId = uint64((seed % _handsTotalAssets) + 1);
-        seed >> 8;
-        hatAssetId = uint64((seed % _hatsTotalAssets) + 1);
-        seed >> 8;
-        shirtAssetId = uint64((seed % _shirtsTotalAssets) + 1);
+        parentAssetId = _getAssetFromSeed(_parentAssetOdds, baseSeed);
+        baseSeed >>= 8;
+        backgroundAssetId = _getAssetFromSeed(_backgroundsAssetOdds, baseSeed);
+        baseSeed >>= 8;
+        glassesAssetId = _getAssetFromSeed(_glassesAssetOdds, baseSeed);
+        baseSeed >>= 8;
+        handsAssetId = _getAssetFromSeed(_handsAssetOdds, baseSeed);
+        baseSeed >>= 8;
+        hatAssetId = _getAssetFromSeed(_hatsAssetOdds, baseSeed);
+        baseSeed >>= 8;
+        shirtAssetId = _getAssetFromSeed(_shirtsAssetOdds, baseSeed);
+    }
+
+    function _getAssetFromSeed(
+        uint256[] memory odds,
+        uint256 seed
+    ) private view returns (uint64) {
+        uint256 totalOdds;
+        uint256 modSeed = seed % 100;
+        for (uint256 i; i < odds.length; ) {
+            totalOdds += odds[i];
+            unchecked {
+                ++i;
+            }
+            if (modSeed < totalOdds) {
+                return uint64(i);
+            }
+        }
+        return uint64(odds.length);
     }
 
     function _chargeFee(uint256 numPacks) private {

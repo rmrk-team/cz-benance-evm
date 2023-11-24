@@ -1,6 +1,5 @@
 import { ethers } from 'hardhat';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
 import { Minter, Child, Parent, RMRKCatalogImpl } from '../typechain-types';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import {
@@ -60,5 +59,13 @@ describe('CZBenance', async () => {
     expect(await parent.isChildEquipped(1, hands.address, 1)).to.be.true;
     expect(await parent.isChildEquipped(1, hats.address, 1)).to.be.true;
     expect(await parent.isChildEquipped(1, shirts.address, 1)).to.be.true;
+  });
+
+  it.skip('can mint many and they are distributed as expected', async function () {
+    for (let i = 0; i < 100; i++) {
+      await minter.connect(buyer1).mintPacks(buyer1.address, 10, {
+        value: ethers.utils.parseEther('1'),
+      });
+    }
   });
 });
